@@ -41,5 +41,22 @@ router.post('/registered', function (req, res, next) {
     }) // end bcrypt.hash
 }); 
 
+router.get('/list', function(req, res, next) {
+    let sqlquery = "SELECT username, first_name, last_name, email FROM users";
+
+    // Execute SQL query
+    db.query(sqlquery, (err, result) => {
+        if (err) {
+            return next(err); // Handle database errors
+        }
+        
+        // Render the listusers.ejs page, passing the results
+        res.render("listusers.ejs", { availableUsers: result });
+    });
+});
+
+
+
+
 // Export the router object so index.js can access it
 module.exports = router
