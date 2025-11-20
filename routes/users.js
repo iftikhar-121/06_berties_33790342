@@ -57,15 +57,25 @@ router.get('/list', function(req, res, next) {
 
 // Route to display the login form (/users/login)
 router.get('/login', function (req, res, next) {
-    // Assumes you created views/login.ejs
     res.render('login.ejs') 
 })
 
-// Route to handle login submission (/users/loggedin)
+// Route to handle login submission (/users/loggedin) - UPDATED FOR AUDIT LOGGING
 router.post('/loggedin', function (req, res, next) {
     
     const username = req.body.username;
     const plainPassword = req.body.password;
+
+    // NEW: Function to log the attempt status into audit_log
+    const logAttempt = (status) => {
+        let logQuery = "INSERT INTO audit_log (username, status) VALUES (?, ?)";
+        db.query(logQuery, [username, status], (log_err, log_result) => {
+            if (log_err) {
+                // Log the database error but do NOT stop the login attempt from proceeding
+                console.error("Audit Log Insertion Error:", log_err);
+            }
+        });
+    };
 
     // 1. Select the stored hashed password for the given username
     let sqlquery = "SELECT hashed_password FROM users WHERE username = ?";
@@ -75,8 +85,9 @@ router.post('/loggedin', function (req, res, next) {
             return next(db_err);
         }
         
-        // If no user found with that username
+        // If no user found with that username (Login Failure)
         if (result.length === 0) {
+            logAttempt('FAILURE'); // Log Failure
             return res.send('Login Failed: Incorrect username or password.');
         }
 
@@ -85,15 +96,14 @@ router.post('/loggedin', function (req, res, next) {
         // 2. Compare the plain password with the stored hash using bcrypt
         bcrypt.compare(plainPassword, hashedPassword, function(err, compare_result) {
             if (err) {
-                // Handle comparison error
                 return next(err);
             }
             else if (compare_result == true) {
-                // Send success message
+                logAttempt('SUCCESS'); // Log Success
                 res.send('Login Successful! Welcome back, ' + username + '.');
             }
             else {
-                // Send failure message (password did not match)
+                logAttempt('FAILURE'); // Log Failure (Password Mismatch)
                 res.send('Login Failed: Incorrect username or password.');
             }
         }); // end bcrypt.compare
@@ -102,6 +112,20 @@ router.post('/loggedin', function (req, res, next) {
 });
 
 
+// TASK 6: Route to display the full audit history
+router.get('/audit', function(req, res, next) {
+    // Select all fields, ordering by newest attempt first
+    let sqlquery = "SELECT * FROM audit_log ORDER BY attempt_at DESC";
+
+    db.query(sqlquery, (err, result) => {
+        if (err) {
+            return next(err);
+        }
+        
+        // Render the new audit.ejs page
+        res.render("audit.ejs", { auditHistory: result });
+    });
+});
 
 
 // Export the router object so index.js can access it

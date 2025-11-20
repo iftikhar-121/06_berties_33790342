@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+    <head>
+        <title><%=shopData.shopName%> Audit Log</title>
+        <link rel="stylesheet"  type="text/css" href="/main.css" />
+        <style>
+            .status-success {
+                color: green;
+                font-weight: bold;
+            }
+            .status-failure {
+                color: red;
+                font-weight: bold;
+            }
+            
+            /* Existing table styles */
+            table {
+                width: 70%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+        </style>
+    </head>
+    <body>
+        <h1><%=shopData.shopName%> Login Audit Log</h1>
+        <p>Full history of login attempts (newest first):</p>
+        <table>
+            <tr>
+                <th>Username</th>
+                <th>Status</th>
+                <th>Attempt Time</th>
+            </tr>
+            <% if (auditHistory && auditHistory.length) { %>
+                <% auditHistory.forEach(function(log){ %>
+                    <tr>
+                        <td><%= log.username %></td>
+                        
+                        <td class="<%= log.status === 'SUCCESS' ? 'status-success' : 'status-failure' %>"><%= log.status %></td>
+                        
+                        <td>
+                            <% 
+                               // Your robust date parsing logic (can be kept for safety)
+                               let ts = log.attempt_at;
+                               let displayDate;
+                               if (ts instanceof Date) { 
+                                   displayDate = ts.toLocaleString();
+                               } else if (typeof ts === 'string') {
+                                   let d = new Date(ts);
+                                   displayDate = isNaN(d.getTime()) ? ts : d.toLocaleString();
+                               } else {
+                                   displayDate = '—';
+                               }
+                            %>
+                            <%= displayDate %>
+                        </td>
+                    </tr>
+                <% }) %>
+            <% } else { %>
+                <tr><td colspan="3">No audit records found.</td></tr>
+            <% } %>
+        </table>
+        <p><a href="/">Back to Home</a></p>
+    </body>
+</html>
