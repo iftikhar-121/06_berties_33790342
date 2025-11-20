@@ -4,7 +4,10 @@
 CREATE DATABASE IF NOT EXISTS berties_books;
 USE berties_books;
 
+DROP TABLE IF EXISTS audit_log;
+DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS books;
+
 
 # Create the tables
 CREATE TABLE IF NOT EXISTS books (
@@ -26,13 +29,10 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS audit_log (
     log_id      INT AUTO_INCREMENT,
     username    VARCHAR(50) NOT NULL,
-    status      VARCHAR(20) NOT NULL,    
+    status      VARCHAR(20) NOT NULL,
     attempt_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY(log_id)
 );
-
-
-
 
 # Create the application user
 CREATE USER IF NOT EXISTS 'berties_books_app'@'localhost' IDENTIFIED BY 'qwertyuiop'; 
