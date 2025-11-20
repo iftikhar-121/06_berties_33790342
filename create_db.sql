@@ -22,6 +22,18 @@ CREATE TABLE IF NOT EXISTS users (
     hashed_password  VARCHAR(100) NOT NULL, 
     PRIMARY KEY(user_id)
 );
+
+CREATE TABLE IF NOT EXISTS audit_log (
+    log_id      INT AUTO_INCREMENT,
+    username    VARCHAR(50) NOT NULL,
+    status      VARCHAR(20) NOT NULL,    
+    attempt_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(log_id)
+);
+
+
+
+
 # Create the application user
 CREATE USER IF NOT EXISTS 'berties_books_app'@'localhost' IDENTIFIED BY 'qwertyuiop'; 
 GRANT ALL PRIVILEGES ON berties_books.* TO 'berties_books_app'@'localhost';
