@@ -22,7 +22,7 @@ router.post('/registered', function (req, res, next) {
             return next(err); // Handle hashing error
         }
 
-        // 4. DATABASE INSERT (Refer to /books/bookadded route for a hint [cite: 356])
+        // 4. DATABASE INSERTION
         let sqlquery = "INSERT INTO users (username, first_name, last_name, email, hashed_password) VALUES (?,?,?,?,?)";
         let newrecord = [req.body.username, req.body.first, req.body.last, req.body.email, hashedPassword];
 
