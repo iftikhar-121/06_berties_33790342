@@ -55,6 +55,52 @@ router.get('/list', function(req, res, next) {
     });
 });
 
+// Route to display the login form (/users/login)
+router.get('/login', function (req, res, next) {
+    // Assumes you created views/login.ejs
+    res.render('login.ejs') 
+})
+
+// Route to handle login submission (/users/loggedin)
+router.post('/loggedin', function (req, res, next) {
+    
+    const username = req.body.username;
+    const plainPassword = req.body.password;
+
+    // 1. Select the stored hashed password for the given username
+    let sqlquery = "SELECT hashed_password FROM users WHERE username = ?";
+    
+    db.query(sqlquery, [username], (db_err, result) => {
+        if (db_err) {
+            return next(db_err);
+        }
+        
+        // If no user found with that username
+        if (result.length === 0) {
+            return res.send('Login Failed: Incorrect username or password.');
+        }
+
+        const hashedPassword = result[0].hashed_password;
+
+        // 2. Compare the plain password with the stored hash using bcrypt
+        bcrypt.compare(plainPassword, hashedPassword, function(err, compare_result) {
+            if (err) {
+                // Handle comparison error
+                return next(err);
+            }
+            else if (compare_result == true) {
+                // Send success message
+                res.send('Login Successful! Welcome back, ' + username + '.');
+            }
+            else {
+                // Send failure message (password did not match)
+                res.send('Login Failed: Incorrect username or password.');
+            }
+        }); // end bcrypt.compare
+
+    }); // end db.query
+});
+
 
 
 
