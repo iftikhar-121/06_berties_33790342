@@ -18,3 +18,25 @@ The hardcoded credentials in `index.js` have been replaced with environment vari
 ## audit
 
 Audit logging has been implemented to track successful and failed login attempts. A new database table, `audit_log`, stores the `username`, `status` (SUCCESS or FAILURE), and `attempt_at` timestamp for every login attempt. A new route, `/users/audit`, allows administrators to view this full audit history.
+
+## Access control (Task 5)
+
+Protected pages (require login via session):
+- `/users/list` — list registered users (users.js)
+- `/users/audit` — view login audit history (users.js)
+- `/books/addbook` — display 'add book' form (books.js)
+- `/books/bookadded` — handle 'add book' form submission (books.js)
+- `/logout` — logout page (main.js) — accessible only when logged in
+
+Public pages (no login required):
+- `/` — home page
+- `/about`
+- `/books/search` and `/books/search-result`
+- `/books/list` and `/books/bargainbooks`
+- `/users/register`, `/users/registered` (registration flow)
+- `/users/login`, `/users/loggedin` (login flow)
+
+How to test access control:
+1. Visit `/users/list`, `/users/audit`, or `/books/addbook` without logging in — you should be redirected to the login page.
+2. Log in via `/users/login`, then revisit the pages — they should load as expected.
+3. Use the browser developer tools to inspect the session cookie created after login.

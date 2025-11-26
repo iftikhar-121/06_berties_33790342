@@ -6,6 +6,14 @@ const router = express.Router()
 const bcrypt = require('bcrypt') 
 const saltRounds = 10 
 
+const redirectLogin = (req, res, next) => {
+    if (!req.session.userId ) {
+      res.redirect('./login') // redirect to the login page
+    } else { 
+        next (); // move to the next middleware function
+    } 
+}
+
 router.get('/register', function (req, res, next) {
     res.render('register.ejs')
 })
@@ -41,7 +49,7 @@ router.post('/registered', function (req, res, next) {
     }) // end bcrypt.hash
 }); 
 
-router.get('/list', function(req, res, next) {
+router.get('/list', redirectLogin, function(req, res, next) {
     let sqlquery = "SELECT username, first_name, last_name, email FROM users";
 
     // Execute SQL query
@@ -99,6 +107,7 @@ router.post('/loggedin', function (req, res, next) {
                 return next(err);
             }
             else if (compare_result == true) {
+                req.session.userId = req.body.username; // Set the session userId upon successful login
                 logAttempt('SUCCESS'); // Log Success
                 res.send('Login Successful! Welcome back, ' + username + '.');
             }
@@ -113,7 +122,7 @@ router.post('/loggedin', function (req, res, next) {
 
 
 // TASK 6: Route to display the full audit history
-router.get('/audit', function(req, res, next) {
+router.get('/audit', redirectLogin, function(req, res, next) {
     // Select all fields, ordering by newest attempt first
     let sqlquery = "SELECT * FROM audit_log ORDER BY attempt_at DESC";
 

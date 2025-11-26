@@ -2,6 +2,13 @@
 const express = require("express");
 const router = express.Router();
 
+const redirectLogin = (req, res, next) => {
+    if (!req.session.userId ) {
+      res.redirect('../users/login') 
+    } else { 
+        next ();
+    } 
+}
 // This route just displays the search page for the first time
 router.get('/search', function(req, res, next) {
     // Render search.ejs, passing default values
@@ -76,14 +83,14 @@ router.get('/bargainbooks', function(req, res, next) {
 });
 
 // Route to display the 'add book' form
-router.get('/addbook', function(req, res, next) {
+router.get('/addbook', redirectLogin, function(req, res, next) {
     // We add shopData here so addbook.ejs can use it
     let shopData = { shopName: "Bertie's Books" };
     res.render('addbook.ejs', { shopData: shopData });
 });
 
 // Route to handle the 'add book' form submission 
-router.post('/bookadded', function(req, res, next) {
+router.post('/bookadded', redirectLogin, function(req, res, next) {
     // saving data in database
     let sqlquery = "INSERT INTO books (name, price) VALUES (?,?)";
     // execute sql query
