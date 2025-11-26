@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
     username         VARCHAR(50) UNIQUE NOT NULL,
     first_name       VARCHAR(50) NOT NULL,
     last_name        VARCHAR(50) NOT NULL,
-    email            VARCHAR(100) NOT NULL,
+    email            VARCHAR(100) NOT NULL, --make unique in future
     hashed_password  VARCHAR(100) NOT NULL, 
     PRIMARY KEY(user_id)
 );
@@ -33,7 +33,3 @@ CREATE TABLE IF NOT EXISTS audit_log (
     attempt_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY(log_id)
 );
-
-# Create the application user
-CREATE USER IF NOT EXISTS 'berties_books_app'@'localhost' IDENTIFIED BY 'qwertyuiop'; 
-GRANT ALL PRIVILEGES ON berties_books.* TO 'berties_books_app'@'localhost';
