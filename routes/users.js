@@ -6,6 +6,8 @@ const router = express.Router()
 const bcrypt = require('bcrypt') 
 const saltRounds = 10 
 
+const { check, validationResult } = require('express-validator');
+
 const redirectLogin = (req, res, next) => {
     if (!req.session.userId ) {
       res.redirect('./login') // redirect to the login page
@@ -18,36 +20,61 @@ router.get('/register', function (req, res, next) {
     res.render('register.ejs')
 })
 
-router.post('/registered', function (req, res, next) {
-    
-    // 2. CAPTURE PLAIN PASSWORD
-    const plainPassword = req.body.password 
+router.post(
+  '/registered',
+  [
+    check('email').isEmail(),
+    check('username').isLength({ min: 5, max: 20 }),
+    check('username').isAlphanumeric().withMessage('Username must be alphanumeric'),
+    check('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+    check('first').notEmpty().withMessage('First name is required'),
+    check('last').notEmpty().withMessage('Last name is required')
+  ],
+  function (req, res, next) {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        res.render('./register')
+    }
+    else {
+        // Sanitize input fields before use
+        const cleanFirst = req.sanitize(req.body.first);
+        const cleanLast = req.sanitize(req.body.last);
+        const cleanUsername = req.sanitize(req.body.username);
+        const cleanEmail = req.sanitize(req.body.email);
 
-    // 3. HASH THE PASSWORD AND DEFINE THE INSERT LOGIC INSIDE THE CALLBACK
-    bcrypt.hash(plainPassword, saltRounds, function(err, hashedPassword) { 
-        
-        if (err) {
-            return next(err); // Handle hashing error
-        }
+        // 2. CAPTURE PLAIN PASSWORD (do not sanitize passwords)
+        const plainPassword = req.body.password 
 
-        // 4. DATABASE INSERTION
-        let sqlquery = "INSERT INTO users (username, first_name, last_name, email, hashed_password) VALUES (?,?,?,?,?)";
-        let newrecord = [req.body.username, req.body.first, req.body.last, req.body.email, hashedPassword];
-
-        db.query(sqlquery, newrecord, (db_err, result) => {
-            if (db_err) {
-                return next(db_err); // Handle database insertion error
+        // 3. HASH THE PASSWORD AND DEFINE THE INSERT LOGIC INSIDE THE CALLBACK
+        bcrypt.hash(plainPassword, saltRounds, function(err, hashedPassword) { 
+            
+            if (err) {
+                return next(err); // Handle hashing error
             }
 
-            // 5. SEND DEBUGGING MESSAGE
-            let result_message = 'Hello '+ req.body.first + ' '+ req.body.last +' you are now registered! '
-            result_message += 'We will send an email to you at ' + req.body.email
-            result_message += 'Your password is: '+ req.body.password +' and your hashed password is: '+ hashedPassword 
-            res.send(result_message) 
-        }); // end db.query
+            // 4. DATABASE INSERTION
+            let sqlquery = "INSERT INTO users (username, first_name, last_name, email, hashed_password) VALUES (?,?,?,?,?)";
+            let newrecord = [cleanUsername, cleanFirst, cleanLast, cleanEmail, hashedPassword];
 
-    }) // end bcrypt.hash
-}); 
+            db.query(sqlquery, newrecord, (db_err, result) => {
+                if (db_err) {
+                    // Handle duplicate username/email nicely
+                    if (db_err.code === 'ER_DUP_ENTRY') {
+                        return res.render('./register');
+                    }
+                    return next(db_err); // Other database errors
+                }
+
+                // 5. SEND CONFIRMATION MESSAGE (no credentials included)
+                let result_message = 'Hello ' + cleanFirst + ' ' + cleanLast + ' you are now registered! ';
+                result_message += 'We will send an email to you at ' + cleanEmail;
+                res.send(result_message);
+            }); // end db.query
+
+        }) // end bcrypt.hash
+    }
+  }
+); 
 
 router.get('/list', redirectLogin, function(req, res, next) {
     let sqlquery = "SELECT username, first_name, last_name, email FROM users";
@@ -70,14 +97,14 @@ router.get('/login', function (req, res, next) {
 
 // Route to handle login submission (/users/loggedin) - UPDATED FOR AUDIT LOGGING
 router.post('/loggedin', function (req, res, next) {
-    
-    const username = req.body.username;
+    // Sanitize username to prevent reflected XSS in responses/audit; do not sanitize password
+    const username = req.sanitize(req.body.username);
     const plainPassword = req.body.password;
 
     // NEW: Function to log the attempt status into audit_log
     const logAttempt = (status) => {
         let logQuery = "INSERT INTO audit_log (username, status) VALUES (?, ?)";
-        db.query(logQuery, [username, status], (log_err, log_result) => {
+    db.query(logQuery, [username, status], (log_err, log_result) => {
             if (log_err) {
                 // Log the database error but do NOT stop the login attempt from proceeding
                 console.error("Audit Log Insertion Error:", log_err);
@@ -107,7 +134,7 @@ router.post('/loggedin', function (req, res, next) {
                 return next(err);
             }
             else if (compare_result == true) {
-                req.session.userId = req.body.username; // Set the session userId upon successful login
+                req.session.userId = username; // Set the session userId upon successful login
                 logAttempt('SUCCESS'); // Log Success
                 res.send('Login Successful! Welcome back, ' + username + '.');
             }

@@ -33,3 +33,9 @@ CREATE TABLE IF NOT EXISTS audit_log (
     attempt_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY(log_id)
 );
+
+# Create least-privilege application user and grant limited permissions
+DROP USER IF EXISTS 'berties_books_app'@'localhost';
+CREATE USER 'berties_books_app'@'localhost' IDENTIFIED BY 'qwertyuiop';
+GRANT SELECT, INSERT, UPDATE ON berties_books.* TO 'berties_books_app'@'localhost';
+FLUSH PRIVILEGES;

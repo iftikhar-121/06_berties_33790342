@@ -7,6 +7,7 @@ var ejs = require('ejs')
 const path = require('path')
 var mysql = require('mysql2');
 var session = require ('express-session')
+const expressSanitizer = require('express-sanitizer');
 
 // Create the express application object
 const app = express()
@@ -17,6 +18,9 @@ app.set('view engine', 'ejs')
 
 // Set up the body parser 
 app.use(express.urlencoded({ extended: true }))
+
+// Create an input sanitizer
+app.use(expressSanitizer());
 
 // Create a session
 app.use(session({
@@ -36,7 +40,7 @@ app.locals.shopData = {shopName: "Bertie's Books"}
 
 // Define the database connection pool
 const db = mysql.createPool({
-    host: 'localhost',
+    host: process.env.BB_HOST || 'localhost',
     user: process.env.BB_USER,             
     password: process.env.BB_PASSWORD,     
     database: process.env.BB_DATABASE,     
