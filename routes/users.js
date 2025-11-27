@@ -60,7 +60,7 @@ router.post(
                 if (db_err) {
                     // Handle duplicate username/email nicely
                     if (db_err.code === 'ER_DUP_ENTRY') {
-                        return res.render('./register');
+                        return res.render('./register', { error: 'Username or email already taken' });
                     }
                     return next(db_err); // Other database errors
                 }
