@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Weather</title>
+    <link rel="stylesheet" type="text/css" href="/main.css" />
+  </head>
+  <body>
+    <h1>Weather forecast</h1>
+    <form method="GET" action="/weather" style="margin-bottom: 1rem;">
+      <label for="city">City:</label>
+      <input type="text" id="city" name="city" value="<%= city || '' %>" />
+      <button type="submit">Show Weather</button>
+    </form>
+
+    <!-- Error message if present -->
+    <% if (typeof error !== 'undefined' && error) { %>
+      <p class="error" style="color: #b00020; font-weight: 600;"><%= error %></p>
+    <% } %>
+
+    <% if (city && typeof temp !== 'undefined') { %>
+      <div class="card" style="background:#f5f7fa; padding:1rem 1.25rem; border-radius:8px; max-width:480px;">
+        <p style="font-size:1.1rem;">It is <strong style="font-size:1.5rem; color:#1a73e8;"><%= temp %>&deg;C</strong> in <strong><%= city %></strong>.</p>
+        <p>The humidity now is: <strong><%= humidity %>%</strong>.</p>
+        <% if (typeof wind !== 'undefined') { %>
+          <p>Wind speed: <strong><%= wind %> m/s</strong>.</p>
+        <% } %>
+        <% if (description) { %>
+          <p>Conditions: <strong><%= description %></strong>.</p>
+        <% } %>
+      </div>
+    <% } %>
+  </body>
+</html>
