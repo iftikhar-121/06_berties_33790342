@@ -2,6 +2,30 @@
 
 Sample code for Dynamic Web Applications module.
 
+## API documentation
+
+Base path: `/api`
+
+### GET `/api/books`
+Returns a JSON array of books.
+
+Query parameters (all optional):
+- `search`: string. Filters books where `name` contains the keyword (case-insensitive depends on DB collation).
+- `minprice`: number. Filters books with `price >= minprice`.
+- `max_price`: number. Filters books with `price <= max_price`.
+- `sort`: string. Sorts results; allowed values: `name` or `price` (ascending).
+
+Examples:
+- All books: `http://localhost:8000/api/books`
+- Keyword filter: `http://localhost:8000/api/books?search=world`
+- Price range: `http://localhost:8000/api/books?minprice=5&max_price=10`
+- Sort by name: `http://localhost:8000/api/books?sort=name`
+- Combined: `http://localhost:8000/api/books?search=world&minprice=5&max_price=20&sort=price`
+
+Notes:
+- Inputs are sanitized and values are parameterized to prevent SQL injection.
+- If parameters are missing or invalid, they are ignored and defaults apply.
+
 Uses node.js with Express and EJS.
 
 To install and run:
